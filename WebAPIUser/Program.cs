@@ -1,17 +1,25 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPIUser.Models;
+using WebAPIUser.Services;
+using WebAPIUser.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DbUserContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("connectionDB")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("connectionDB")));
+
+// Registrar servicios
+builder.Services.AddScoped<IMapperService, MapperService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
+// Usar middleware de manejo de excepciones
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapGet("/", (HttpContext context) =>
 {

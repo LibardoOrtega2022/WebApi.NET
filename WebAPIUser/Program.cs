@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using WebAPIUser.Models;
 using WebAPIUser.Services;
 using WebAPIUser.Middleware;
+using WebAPIUser.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DbUserContext>(options =>
@@ -10,6 +11,7 @@ builder.Services.AddDbContext<DbUserContext>(options =>
 // Registrar servicios
 builder.Services.AddScoped<IMapperService, MapperService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<ITareaService, TareaService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -40,5 +42,17 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Inicializar datos de prueba (opcional)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DbUserContext>();
+
+    // Asegurar que las migraciones están aplicadas
+    await db.Database.MigrateAsync();
+
+    // Llenar datos de prueba si es necesario
+    await DataSeeder.InicializarDatosAsync(db);
+}
 
 app.Run();

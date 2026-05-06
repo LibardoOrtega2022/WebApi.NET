@@ -23,4 +23,7 @@ public partial class Usuario
     public string? Username { get; set; }
 
     public DateTime? FechaCreacion { get; set; } = DateTime.UtcNow;
+
+    // Relación M:M con Tareas
+    public virtual ICollection<UsuarioTarea> UsuarioTareas { get; set; } = [];
 }

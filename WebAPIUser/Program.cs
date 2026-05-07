@@ -1,4 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// ─────────────────────────────────────────────────────────────────────────────
+// WebAPIUser — Entry point de la aplicación ASP.NET Core
+// Configura el contenedor de dependencias (builder) y el pipeline HTTP (app).
+// ─────────────────────────────────────────────────────────────────────────────
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using System.Reflection;
 using WebAPIUser.Data;
@@ -8,21 +13,33 @@ using WebAPIUser.Services;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Base de datos ─────────────────────────────────────────────────────────────
+// Registra DbUserContext con SQL Server usando la cadena de conexión "connectionDB"
+// definida en appsettings.json.
 builder.Services.AddDbContext<DbUserContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("connectionDB")));
 
 // Registrar servicios
+// Scoped: una instancia por request HTTP. Apropiado para servicios que usan DbContext.
 builder.Services.AddScoped<IMapperService, MapperService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ITareaService, TareaService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// ── Swagger / OpenAPI ─────────────────────────────────────────────────────────
+// AddOpenApi() registra el soporte nativo de .NET 10 para OpenAPI.
+// AddSwaggerGen() registra Swashbuckle para generar la UI interactiva.
+// Se llama dos veces: la primera sin opciones (requerida por el pipeline),
+// la segunda con la configuración personalizada del documento.
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSwaggerGen(options =>
 {
+    // Metadatos del documento OpenAPI visible en la UI de Swagger
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Mi API de Usuarios/My User API",
@@ -36,6 +53,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     // ✅ Le dice a Swagger dónde está el archivo XML generado
+    // El archivo XML se genera automáticamente gracias a <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    // en el .csproj, y contiene todos los /// <summary> del código.
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
@@ -43,9 +62,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Usar middleware de manejo de excepciones
+// ── Middleware global de excepciones ──────────────────────────────────────────
+// Debe registrarse PRIMERO para interceptar cualquier excepción del pipeline.
+// Convierte excepciones no manejadas en respuestas JSON estructuradas.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// ── Redirección raíz → Swagger ────────────────────────────────────────────────
+// Redirige la URL raíz "/" a "/swagger" para facilitar el acceso a la documentación.
 app.MapGet("/", (HttpContext context) =>
 {
     context.Response.Redirect("/swagger");
@@ -53,6 +76,7 @@ app.MapGet("/", (HttpContext context) =>
 });
 
 // Configure the HTTP request pipeline.
+// Solo en Development se expone Swagger para no publicar la documentación en producción.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -66,7 +90,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Inicializar datos de prueba (opcional)
+// ── Inicialización de base de datos ───────────────────────────────────────────
+// Se ejecuta al arrancar la aplicación:
+// 1. MigrateAsync() aplica las migraciones pendientes automáticamente.
+// 2. InicializarDatosAsync() inserta datos de prueba si las tablas están vacías.
+// El scope se crea manualmente porque DbContext es Scoped y no puede resolverse
+// directamente desde el contenedor raíz (Singleton).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DbUserContext>();

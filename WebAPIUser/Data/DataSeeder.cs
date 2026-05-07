@@ -4,18 +4,24 @@ using Microsoft.EntityFrameworkCore;
 namespace WebAPIUser.Data;
 
 /// <summary>
-/// Orquestador principal de seeding de datos
-/// Crea usuarios, tareas y asignaciones de forma ordenada
+/// Orquestador principal del proceso de seeding de datos.
+/// Coordina la creación de usuarios, tareas y asignaciones en el orden correcto,
+/// garantizando que las dependencias entre tablas se respeten.
+/// Es idempotente: si los datos ya existen, no realiza ninguna inserción.
 /// </summary>
 public static class DataSeeder
 {
     /// <summary>
-    /// Inicializa toda la base de datos con datos de prueba
-    /// Orden de ejecución:
-    /// 1. Crear usuarios (si no existen)
-    /// 2. Crear 50 tareas (si no existen)
-    /// 3. Asignar tareas a usuarios (si no existen asignaciones)
+    /// Punto de entrada del proceso de inicialización de datos.
+    /// Ejecuta los tres pasos en orden secuencial:
+    /// <list type="number">
+    ///   <item>Crear 10 usuarios (si la tabla está vacía).</item>
+    ///   <item>Crear 50 tareas aleatorias (si la tabla está vacía).</item>
+    ///   <item>Asignar tareas a usuarios en la tabla pivote (si no hay asignaciones).</item>
+    /// </list>
+    /// Si cualquier paso falla, relanza la excepción para que el error sea visible al iniciar la app.
     /// </summary>
+    /// <param name="context">Contexto de base de datos activo.</param>
     public static async Task InicializarDatosAsync(DbUserContext context)
     {
         Console.WriteLine("\n╔════════════════════════════════════════════════════════════╗");
@@ -53,8 +59,12 @@ public static class DataSeeder
     }
 
     /// <summary>
-    /// Muestra un resumen de los datos creados
+    /// Imprime en consola un resumen con los totales de registros en cada tabla
+    /// y el promedio de tareas por usuario.
+    /// Se ejecuta al final del proceso de inicialización.
+    /// Los errores de consulta se ignoran silenciosamente para no interrumpir el arranque.
     /// </summary>
+    /// <param name="context">Contexto de base de datos activo.</param>
     private static void MostrarResumenFinal(DbUserContext context)
     {
         try

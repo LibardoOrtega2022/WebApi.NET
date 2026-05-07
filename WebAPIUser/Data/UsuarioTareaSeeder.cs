@@ -5,17 +5,24 @@ using System.Linq;
 namespace WebAPIUser.Data;
 
 /// <summary>
-/// Generador de asignaciones de tareas a usuarios
-/// Asigna 5 tareas por usuario (50 tareas ÷ 10 usuarios)
+/// Generador de asignaciones de tareas a usuarios para la tabla pivote <c>UsuarioTarea</c>.
+/// Distribuye las tareas existentes entre los usuarios existentes de forma aleatoria,
+/// asignando aproximadamente (total_tareas / total_usuarios) tareas por usuario.
+/// Garantiza que no se creen asignaciones duplicadas (mismo usuario + misma tarea).
+/// Solo inserta si la tabla <c>UsuarioTarea</c> está vacía (idempotente).
 /// </summary>
 public static class UsuarioTareaSeeder
 {
+    /// <summary>Instancia compartida de Random para todas las generaciones aleatorias.</summary>
     private static readonly Random _random = new();
 
     /// <summary>
-    /// Asigna tareas aleatorias a usuarios existentes
-    /// Cada usuario recibe aproximadamente 5 tareas
+    /// Punto de entrada del seeder de asignaciones.
+    /// Carga usuarios y tareas existentes, verifica que ambas tablas tengan datos,
+    /// y distribuye las tareas entre los usuarios evitando duplicados.
+    /// Imprime estadísticas por usuario al finalizar.
     /// </summary>
+    /// <param name="context">Contexto de base de datos activo.</param>
     public static async Task AsignarTareasAUsuariosAsync(DbUserContext context)
     {
         // Obtener usuarios y tareas existentes
@@ -93,9 +100,15 @@ public static class UsuarioTareaSeeder
     }
 
     /// <summary>
-    /// Obtiene un conjunto de tareas aleatorias para un usuario
-    /// Intenta darle aproximadamente (total_tareas / total_usuarios) tareas
+    /// Selecciona aleatoriamente un subconjunto de tareas para asignar a un usuario.
+    /// La cantidad base es <c>ceil(totalTareas / totalUsuarios)</c>.
+    /// Con un 30% de probabilidad, se ajusta en ±1 para agregar variabilidad natural.
+    /// Las tareas se ordenan aleatoriamente antes de tomar el subconjunto.
     /// </summary>
+    /// <param name="tareas">Lista completa de tareas disponibles.</param>
+    /// <param name="cantidadUsuarios">Total de usuarios entre los que se distribuyen las tareas.</param>
+    /// <param name="indiceUsuario">Índice del usuario actual (no usado en la selección, reservado para extensiones).</param>
+    /// <returns>Subconjunto aleatorio de tareas para el usuario.</returns>
     private static List<Tarea> ObtenerTareasAleatorias(List<Tarea> tareas, int cantidadUsuarios, int indiceUsuario)
     {
         var tareasParaUsuario = new List<Tarea>();
@@ -114,8 +127,15 @@ public static class UsuarioTareaSeeder
     }
 
     /// <summary>
-    /// Genera un estado aleatorio para la asignación
+    /// Selecciona un estado de asignación con distribución de probabilidad ponderada:
+    /// <list type="bullet">
+    ///   <item>50% → Pendiente (estado más común al inicio)</item>
+    ///   <item>30% → EnProgreso</item>
+    ///   <item>15% → Completada</item>
+    ///   <item>5%  → Cancelada</item>
+    /// </list>
     /// </summary>
+    /// <returns>Estado aleatorio ponderado del enum <see cref="EstadoTareaEnum"/>.</returns>
     private static EstadoTareaEnum GenerarEstadoAleatorio()
     {
         var estados = Enum.GetValues(typeof(EstadoTareaEnum)).Cast<EstadoTareaEnum>().ToArray();
@@ -136,8 +156,14 @@ public static class UsuarioTareaSeeder
 
     /// <summary>
     /// Genera una fecha de completado coherente con el estado de la asignación.
-    /// Solo Completada y Cancelada tienen fecha; Pendiente y EnProgreso no.
+    /// <list type="bullet">
+    ///   <item><see cref="EstadoTareaEnum.Completada"/> → fecha entre 1 y 30 días atrás.</item>
+    ///   <item><see cref="EstadoTareaEnum.Cancelada"/>  → fecha entre 1 y 15 días atrás.</item>
+    ///   <item>Cualquier otro estado → <c>null</c> (la tarea no ha terminado).</item>
+    /// </list>
     /// </summary>
+    /// <param name="estado">Estado de la asignación para determinar si aplica fecha de completado.</param>
+    /// <returns>Fecha pasada si el estado es terminal, <c>null</c> en caso contrario.</returns>
     private static DateTime? GenerarFechaCompletado(EstadoTareaEnum estado)
     {
         return estado switch
@@ -149,8 +175,11 @@ public static class UsuarioTareaSeeder
     }
 
     /// <summary>
-    /// Muestra estadísticas de las asignaciones
+    /// Imprime en consola un desglose por usuario mostrando cuántas tareas recibió
+    /// y cuántas hay en cada estado. Útil para verificar la distribución del seeding.
     /// </summary>
+    /// <param name="usuarios">Lista de usuarios para resolver nombres por ID.</param>
+    /// <param name="asignaciones">Lista de asignaciones recién creadas.</param>
     private static void MostrarEstadisticas(List<Usuario> usuarios, List<UsuarioTarea> asignaciones)
     {
         Console.WriteLine("\n📊 Estadísticas de Asignaciones:");

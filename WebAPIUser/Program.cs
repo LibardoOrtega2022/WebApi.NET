@@ -1,8 +1,11 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using System.Reflection;
+using WebAPIUser.Data;
+using WebAPIUser.Middleware;
 using WebAPIUser.Models;
 using WebAPIUser.Services;
-using WebAPIUser.Middleware;
-using WebAPIUser.Data;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DbUserContext>(options =>
@@ -17,6 +20,26 @@ builder.Services.AddScoped<ITareaService, TareaService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Mi API de Usuarios/My User API",
+        Version = "v1",
+        Description = "API REST para gestión de usuarios y tareas/REST API for user and task management",
+        Contact = new OpenApiContact
+        {
+            Name = "Libardo Amesquita",
+            Email = "libardoadolfo2@gmail.com"
+        }
+    });
+
+    // ✅ Le dice a Swagger dónde está el archivo XML generado
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 
@@ -48,11 +71,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DbUserContext>();
 
-    // Asegurar que las migraciones est�n aplicadas
+    // Asegurar que las migraciones están aplicadas
     await db.Database.MigrateAsync();
 
     // Llenar datos de prueba si es necesario
     await DataSeeder.InicializarDatosAsync(db);
 }
+
+
 
 app.Run();

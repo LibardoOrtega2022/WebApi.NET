@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebAPIUser.DTOs;
 using WebAPIUser.Services;
@@ -19,11 +19,18 @@ namespace WebAPIUser.Controllers
         }
 
         /// <summary>
-        /// Obtiene la lista de todos los usuarios
+        /// Obtiene la lista de todos los usuarios.
+        /// <br/>Retrieves the list of all users.
         /// </summary>
-        /// <returns>Lista de usuarios</returns>
-        /// <response code="200">Retorna la lista de usuarios</response>
-        [HttpGet("listar")]
+        /// <returns>
+        /// Lista de usuarios registrados en el sistema.
+        /// <br/>List of users registered in the system.
+        /// </returns>
+        /// <response code="200">
+        /// Retorna la lista de usuarios.
+        /// <br/>Returns the list of users.
+        /// </response>
+        [HttpGet("list")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuarios()
         {
@@ -32,14 +39,32 @@ namespace WebAPIUser.Controllers
         }
 
         /// <summary>
-        /// Busca un usuario por su ID
+        /// Busca un usuario por su ID.
+        /// <br/>Finds a user by their ID.
         /// </summary>
-        /// <param name="id">ID del usuario a buscar</param>
-        /// <returns>Usuario encontrado</returns>
-        /// <response code="200">Retorna el usuario encontrado</response>
-        /// <response code="404">Usuario no encontrado</response>
-        [HttpGet("buscar/{id}")]
+        /// <param name="id">
+        /// ID del usuario a buscar (debe ser mayor a 0).
+        /// <br/>ID of the user to find (must be greater than 0).
+        /// </param>
+        /// <returns>
+        /// El usuario encontrado con todos sus datos.
+        /// <br/>The found user with all their data.
+        /// </returns>
+        /// <response code="200">
+        /// Retorna el usuario encontrado.
+        /// <br/>Returns the found user.
+        /// </response>
+        /// <response code="400">
+        /// ID inválido (menor o igual a 0).
+        /// <br/>Invalid ID (less than or equal to 0).
+        /// </response>
+        /// <response code="404">
+        /// Usuario no encontrado con el ID proporcionado.
+        /// <br/>User not found with the provided ID.
+        /// </response>
+        [HttpGet("find/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<UsuarioDto>> GetUsuarioById(int id)
         {
@@ -59,13 +84,29 @@ namespace WebAPIUser.Controllers
         }
 
         /// <summary>
-        /// Crea un nuevo usuario
+        /// Crea un nuevo usuario en el sistema.
+        /// <br/>Creates a new user in the system.
         /// </summary>
-        /// <param name="createDto">Datos del usuario a crear</param>
-        /// <returns>Usuario creado</returns>
-        /// <response code="201">Usuario creado exitosamente</response>
-        /// <response code="400">Datos inválidos</response>
-        /// <response code="409">El correo ya está registrado</response>
+        /// <param name="createDto">
+        /// Datos del usuario a crear (nombre, correo, contraseña).
+        /// <br/>Data of the user to create (name, email, password).
+        /// </param>
+        /// <returns>
+        /// El usuario creado con su ID autogenerado.
+        /// <br/>The created user with their auto-generated ID.
+        /// </returns>
+        /// <response code="201">
+        /// Usuario creado exitosamente. Incluye la ubicación del recurso en el header Location.
+        /// <br/>User created successfully. Includes the resource location in the Location header.
+        /// </response>
+        /// <response code="400">
+        /// Datos inválidos o validaciones de modelo no cumplidas.
+        /// <br/>Invalid data or model validation failed.
+        /// </response>
+        /// <response code="409">
+        /// El correo electrónico ya está registrado en el sistema.
+        /// <br/>The email address is already registered in the system.
+        /// </response>
         [HttpPost("guardar")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,15 +130,37 @@ namespace WebAPIUser.Controllers
         }
 
         /// <summary>
-        /// Actualiza un usuario existente
+        /// Actualiza un usuario existente de forma completa (PUT).
+        /// <br/>Fully updates an existing user (PUT).
         /// </summary>
-        /// <param name="id">ID del usuario a actualizar</param>
-        /// <param name="updateDto">Datos actualizados del usuario</param>
-        /// <returns>Usuario actualizado</returns>
-        /// <response code="200">Usuario actualizado exitosamente</response>
-        /// <response code="400">Datos inválidos</response>
-        /// <response code="404">Usuario no encontrado</response>
-        /// <response code="409">El correo ya está registrado</response>
+        /// <param name="id">
+        /// ID del usuario a actualizar (debe ser mayor a 0).
+        /// <br/>ID of the user to update (must be greater than 0).
+        /// </param>
+        /// <param name="updateDto">
+        /// Datos actualizados del usuario (nombre, correo, contraseña).
+        /// <br/>Updated user data (name, email, password).
+        /// </param>
+        /// <returns>
+        /// El usuario actualizado con todos sus campos modificados.
+        /// <br/>The updated user with all modified fields.
+        /// </returns>
+        /// <response code="200">
+        /// Usuario actualizado exitosamente.
+        /// <br/>User updated successfully.
+        /// </response>
+        /// <response code="400">
+        /// Datos inválidos o validaciones de modelo no cumplidas.
+        /// <br/>Invalid data or model validation failed.
+        /// </response>
+        /// <response code="404">
+        /// Usuario no encontrado con el ID proporcionado.
+        /// <br/>User not found with the provided ID.
+        /// </response>
+        /// <response code="409">
+        /// El correo electrónico ya está registrado por otro usuario.
+        /// <br/>The email address is already registered by another user.
+        /// </response>
         [HttpPut("actualizar/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -133,13 +196,29 @@ namespace WebAPIUser.Controllers
         }
 
         /// <summary>
-        /// Elimina un usuario
+        /// Elimina un usuario del sistema de forma permanente.
+        /// <br/>Permanently deletes a user from the system.
         /// </summary>
-        /// <param name="id">ID del usuario a eliminar</param>
-        /// <returns>No retorna contenido</returns>
-        /// <response code="204">Usuario eliminado exitosamente</response>
-        /// <response code="400">ID inválido</response>
-        /// <response code="404">Usuario no encontrado</response>
+        /// <param name="id">
+        /// ID del usuario a eliminar (debe ser mayor a 0).
+        /// <br/>ID of the user to delete (must be greater than 0).
+        /// </param>
+        /// <returns>
+        /// Sin contenido si la eliminación fue exitosa.
+        /// <br/>No content if the deletion was successful.
+        /// </returns>
+        /// <response code="204">
+        /// Usuario eliminado exitosamente. No retorna contenido.
+        /// <br/>User deleted successfully. No content returned.
+        /// </response>
+        /// <response code="400">
+        /// ID inválido (menor o igual a 0).
+        /// <br/>Invalid ID (less than or equal to 0).
+        /// </response>
+        /// <response code="404">
+        /// Usuario no encontrado con el ID proporcionado.
+        /// <br/>User not found with the provided ID.
+        /// </response>
         [HttpDelete("eliminar/{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

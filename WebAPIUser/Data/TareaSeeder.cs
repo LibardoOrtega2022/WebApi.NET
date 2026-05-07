@@ -158,18 +158,13 @@ public static class TareaSeeder
     }
 
     /// <summary>
-    /// Genera una fecha de vencimiento aleatoria
+    /// Genera una fecha de vencimiento aleatoria entre 1 y 90 días en el futuro.
+    /// Siempre retorna un valor para evitar nulos en los datos de prueba.
     /// </summary>
-    private static DateTime? GenerarFechaVencimiento()
+    private static DateTime GenerarFechaVencimiento()
     {
-        // 80% de probabilidad de tener fecha de vencimiento
-        if (_random.Next(100) < 80)
-        {
-            var diasFuturos = _random.Next(1, 60); // 1 a 60 días en el futuro
-            return DateTime.UtcNow.AddDays(diasFuturos);
-        }
-
-        return null;
+        var diasFuturos = _random.Next(1, 90); // 1 a 90 días en el futuro
+        return DateTime.UtcNow.AddDays(diasFuturos);
     }
 
     /// <summary>

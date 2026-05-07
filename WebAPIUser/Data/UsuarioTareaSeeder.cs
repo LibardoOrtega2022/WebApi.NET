@@ -60,13 +60,15 @@ public static class UsuarioTareaSeeder
                     // Evitar asignaciones duplicadas
                     if (!tareasUsadas.Contains(tarea.Id))
                     {
+                        var estado = GenerarEstadoAleatorio();
+
                         asignaciones.Add(new UsuarioTarea
                         {
                             UsuarioId = usuario.Id,
                             TareaId = tarea.Id,
-                            FechaAsignacion = DateTime.UtcNow,
-                            Estado = GenerarEstadoAleatorio(),
-                            FechaCompletado = GenerarFechaCompletado()
+                            FechaAsignacion = DateTime.UtcNow.AddDays(-_random.Next(1, 30)),
+                            Estado = estado,
+                            FechaCompletado = GenerarFechaCompletado(estado)
                         });
 
                         tareasUsadas.Add(tarea.Id);
@@ -133,17 +135,17 @@ public static class UsuarioTareaSeeder
     }
 
     /// <summary>
-    /// Genera una fecha de completado solo si la tarea está completada
+    /// Genera una fecha de completado coherente con el estado de la asignación.
+    /// Solo Completada y Cancelada tienen fecha; Pendiente y EnProgreso no.
     /// </summary>
-    private static DateTime? GenerarFechaCompletado()
+    private static DateTime? GenerarFechaCompletado(EstadoTareaEnum estado)
     {
-        // Si es completada (30% de probabilidad), generar fecha
-        if (_random.Next(100) < 30)
+        return estado switch
         {
-            return DateTime.UtcNow.AddDays(-_random.Next(1, 30));
-        }
-
-        return null;
+            EstadoTareaEnum.Completada => DateTime.UtcNow.AddDays(-_random.Next(1, 30)),
+            EstadoTareaEnum.Cancelada  => DateTime.UtcNow.AddDays(-_random.Next(1, 15)),
+            _                          => null
+        };
     }
 
     /// <summary>

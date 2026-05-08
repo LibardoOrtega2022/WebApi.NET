@@ -10,9 +10,34 @@ using WebAPIUser.Data;
 using WebAPIUser.Middleware;
 using WebAPIUser.Models;
 using WebAPIUser.Services;
-using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Lee los orígenes permitidos desde appsettings.json / appsettings.Development.json.
+// Esto permite que el frontend React (Vite en puerto 5173) llame al backend
+// sin que el browser bloquee la petición por política de mismo origen.
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+const string CorsPolicyName = "ReactFrontend";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsPolicyName, policy =>
+    {
+        policy
+            // Solo permite los orígenes configurados (no wildcard en producción)
+            .WithOrigins(allowedOrigins)
+            // Permite los métodos HTTP usados por la API REST
+            .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            // Permite los headers estándar de JSON y autenticación
+            .WithHeaders("Content-Type", "Authorization", "Accept")
+            // Permite que el browser envíe cookies/credenciales si se necesita en el futuro
+            .AllowCredentials();
+    });
+});
 
 // ── Base de datos ─────────────────────────────────────────────────────────────
 // Registra DbUserContext con SQL Server usando la cadena de conexión "connectionDB"
@@ -20,13 +45,28 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DbUserContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("connectionDB")));
 
-// Registrar servicios
-// Scoped: una instancia por request HTTP. Apropiado para servicios que usan DbContext.
+// ── HttpClient para PokéAPI (Opción B: proxy) ─────────────────────────────────
+// Registra un HttpClient nombrado "PokeApi" con la base URL de PokéAPI.
+// El servicio PokemonService lo resuelve por nombre desde IHttpClientFactory.
+// Timeout de 10 segundos para no bloquear el thread si PokéAPI tarda.
+builder.Services.AddHttpClient("PokeApi", client =>
+{
+    var baseUrl = builder.Configuration["PokeApi:BaseUrl"]
+                  ?? "https://pokeapi.co/api/v2/";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout     = TimeSpan.FromSeconds(10);
+    // Header recomendado por PokéAPI para identificar el cliente
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// ── Servicios de negocio (Scoped: una instancia por request) ───────────────────
 builder.Services.AddScoped<IMapperService, MapperService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ITareaService, TareaService>();
+// PokemonService es Scoped porque usa HttpClient (stateless, pero sigue el patrón)
+builder.Services.AddScoped<IPokemonService, PokemonService>();
 
-// Add services to the container.
+// ── Controllers ───────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 
 // ── Swagger / OpenAPI ─────────────────────────────────────────────────────────
@@ -42,17 +82,16 @@ builder.Services.AddSwaggerGen(options =>
     // Metadatos del documento OpenAPI visible en la UI de Swagger
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Mi API de Usuarios/My User API",
+        Title = "WebAPIUser + Pokemon Proxy",
         Version = "v1",
-        Description = "API REST para gestión de usuarios y tareas/REST API for user and task management",
+        Description = "REST API for user/task management and PokéAPI proxy for the React SPA frontend.",
         Contact = new OpenApiContact
         {
-            Name = "Libardo Amesquita",
+            Name  = "Libardo Amesquita",
             Email = "libardoadolfo2@gmail.com"
         }
     });
 
-    // ✅ Le dice a Swagger dónde está el archivo XML generado
     // El archivo XML se genera automáticamente gracias a <GenerateDocumentationFile>true</GenerateDocumentationFile>
     // en el .csproj, y contiene todos los /// <summary> del código.
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -67,6 +106,11 @@ var app = builder.Build();
 // Convierte excepciones no manejadas en respuestas JSON estructuradas.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// UseCors DEBE ir antes de UseAuthorization y MapControllers
+// para que los headers CORS se agreguen antes de que el pipeline procese la ruta.
+app.UseCors(CorsPolicyName);
+
 // ── Redirección raíz → Swagger ────────────────────────────────────────────────
 // Redirige la URL raíz "/" a "/swagger" para facilitar el acceso a la documentación.
 app.MapGet("/", (HttpContext context) =>
@@ -75,7 +119,7 @@ app.MapGet("/", (HttpContext context) =>
     return Task.CompletedTask;
 });
 
-// Configure the HTTP request pipeline.
+// ── Pipeline HTTP ─────────────────────────────────────────────────────────────
 // Solo en Development se expone Swagger para no publicar la documentación en producción.
 if (app.Environment.IsDevelopment())
 {
@@ -106,7 +150,5 @@ using (var scope = app.Services.CreateScope())
     // Llenar datos de prueba si es necesario
     await DataSeeder.InicializarDatosAsync(db);
 }
-
-
 
 app.Run();

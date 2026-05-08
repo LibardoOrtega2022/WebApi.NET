@@ -1,111 +1,248 @@
-# 🚀 WebAPIUser v2.0 - Enterprise-Grade REST API
+# WebAPIUser
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-14.0-purple)](https://docs.microsoft.com/en-us/dotnet/csharp/)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](README.md)
+[![EF Core](https://img.shields.io/badge/EF%20Core-10.0.7-orange)](https://learn.microsoft.com/en-us/ef/core/)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%20v1-brightgreen)](https://swagger.io/)
+[![SQL Server](https://img.shields.io/badge/SQL%20Server-LocalDB-red)](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb)
 
-> Una Web API REST profesional y escalable para gestión de usuarios, construida con patrones empresariales, validación exhaustiva y documentación completa.
+API REST construida con .NET 10 para la gestión de **usuarios** y **tareas**, con soporte de asignación muchos a muchos (M:M) entre ambas entidades. Incluye documentación interactiva con Swagger, seeding automático de datos de prueba y middleware global de manejo de errores.
 
 ---
 
-## 📋 Tabla de Contenidos
+## Tabla de contenidos
 
-- [Características](#características)
+- [Stack](#stack)
 - [Requisitos](#requisitos)
-- [Instalación](#instalación)
+- [Instalación y ejecución](#instalación-y-ejecución)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Base de datos](#base-de-datos)
 - [Endpoints](#endpoints)
-- [Ejemplos de Uso](#ejemplos-de-uso)
+- [Ejemplos de uso](#ejemplos-de-uso)
 - [Arquitectura](#arquitectura)
-- [Documentación](#documentación)
-- [Próximos Pasos](#próximos-pasos)
+- [Documentación adicional](#documentación-adicional)
 
 ---
 
-## ✨ Características
+## Stack
 
-### 🎯 Core
-- ✅ **CRUD Completo** - Crear, leer, actualizar y eliminar usuarios
-- ✅ **Validación Exhaustiva** - Data Annotations + validadores especializados
-- ✅ **Manejo de Errores** - Middleware centralizado con respuestas consistentes
-- ✅ **Logging Estructurado** - Trazabilidad completa de operaciones
-
-### 🏗️ Arquitectura
-- ✅ **Separación de Capas** - Controllers → Services → Data Access
-- ✅ **DTOs** - Transferencia segura de datos entre capas
-- ✅ **Inyección de Dependencias** - Código desacoplado y testeable
-- ✅ **Patrones SOLID** - 5/5 principios aplicados
-
-### 📊 Datos
-- ✅ **Entity Framework Core 10.0.7** - ORM moderno y potente
-- ✅ **SQL Server LocalDB** - Base de datos local
-- ✅ **Validaciones** - Constraints, índices y validación de negocio
-- ✅ **Async/Await** - Todas las operaciones asincrónicas
-
-### 📚 Documentación
-- ✅ **Swagger/OpenAPI** - Documentación interactiva
-- ✅ **XML Comments** - Documentación en código 100%
-- ✅ **150+ páginas** - 10 documentos guías y referencias
-- ✅ **50+ ejemplos prácticos** - Código funcionando
+| Tecnología | Versión | Uso |
+|---|---|---|
+| .NET / ASP.NET Core | 10.0 | Framework principal |
+| C# | 14.0 | Lenguaje |
+| Entity Framework Core | 10.0.7 | ORM y migraciones |
+| SQL Server LocalDB | — | Base de datos |
+| Swashbuckle (Swagger) | 10.1.7 | Documentación interactiva |
+| Microsoft.AspNetCore.OpenApi | 10.0.7 | Soporte OpenAPI nativo |
 
 ---
 
-## 📦 Requisitos
+## Requisitos
 
-### Sistema
-- **Windows 10+** / **macOS** / **Linux**
-- **Visual Studio 2022 17.0+** o **VS Code**
-- **.NET 10.0 SDK** ([Descargar](https://dotnet.microsoft.com/download))
-
-### Base de Datos
-- **SQL Server LocalDB** (incluido con Visual Studio)
-- O **SQL Server Express/Full**
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- SQL Server LocalDB (incluido con Visual Studio 2022) o SQL Server Express
+- Visual Studio 2022 / VS Code / Rider
 
 ---
 
-## 🚀 Instalación Rápida
+## Instalación y ejecución
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/usuario/WebAPIUser.git
-cd WebAPIUser
+git clone https://github.com/LibardoOrtega2022/WebAPIUser.git
+cd WebAPIUser/WebAPIUser
 
 # 2. Restaurar dependencias
 dotnet restore
 
-# 3. Crear base de datos
-dotnet ef database update
-
-# 4. Ejecutar
+# 3. Ejecutar (las migraciones y el seeding se aplican automáticamente al arrancar)
 dotnet run
+```
 
-# 5. Abrir en navegador
-# https://localhost:7000/swagger
+Al iniciar, la aplicación:
+1. Aplica las migraciones pendientes con `MigrateAsync()`.
+2. Inserta datos de prueba si las tablas están vacías (10 usuarios, 50 tareas, ~50 asignaciones).
+3. Redirige la raíz `/` a `/swagger`.
+
+Swagger UI disponible en: `http://localhost:5000/swagger`
+
+### Cadena de conexión
+
+Configurada en `appsettings.json`:
+
+```json
+"ConnectionStrings": {
+  "connectionDB": "Data Source=(localdb)\\MSSQLLocalDB;Database=db_user;Trusted_Connection=True;TrustServerCertificate=True;"
+}
+```
+
+Para usar otra instancia de SQL Server, reemplaza el valor de `connectionDB`.
+
+---
+
+## Estructura del proyecto
+
+```
+WebAPIUser/
+├── Controllers/
+│   ├── UsuariosController.cs     — CRUD de usuarios
+│   └── TareasController.cs       — CRUD de tareas + asignaciones M:M
+│
+├── Data/
+│   ├── DataSeeder.cs             — Orquestador del seeding
+│   ├── UsuarioSeeder.cs          — Genera 10 usuarios de prueba
+│   ├── TareaSeeder.cs            — Genera 50 tareas de prueba
+│   └── UsuarioTareaSeeder.cs     — Asigna tareas a usuarios
+│
+├── DTOs/
+│   ├── UsuarioDto.cs             — Respuesta de usuario
+│   ├── CreateUsuarioDto.cs       — Entrada para crear usuario
+│   ├── UpdateUsuarioDto.cs       — Entrada para actualizar usuario
+│   ├── TareaDto.cs               — Respuesta de tarea
+│   ├── CreateTareaDto.cs         — Entrada para crear tarea
+│   ├── UpdateTareaDto.cs         — Entrada para actualizar tarea
+│   ├── AsignarTareaDto.cs        — Entrada para asignar tarea a usuario
+│   └── UsuarioConTareasDto.cs    — Usuario con lista de tareas asignadas
+│
+├── Middleware/
+│   └── ExceptionHandlingMiddleware.cs  — Manejo global de excepciones
+│
+├── Migrations/
+│   └── 20260506180049_AddTareasAndUsuarioTareas.cs
+│
+├── Models/
+│   ├── Usuario.cs                — Entidad usuario
+│   ├── Tarea.cs                  — Entidad tarea + PrioridadEnum
+│   ├── UsuarioTarea.cs           — Tabla pivote M:M + EstadoTareaEnum
+│   └── DbUserContext.cs          — DbContext con Fluent API
+│
+├── Services/
+│   ├── IUsuarioService.cs / UsuarioService.cs
+│   ├── ITareaService.cs          — Interfaz del servicio de tareas
+│   ├── TareaService.cs           — Lógica de negocio de tareas
+│   └── MapperService.cs          — Mapeo entidad ↔ DTO para usuarios
+│
+├── Documentacion/
+│   └── PROJECT_DOCUMENTATION.md  — Documentación técnica completa
+│
+├── Program.cs                    — Entry point y configuración del pipeline
+├── appsettings.json              — Configuración (connection string, logging)
+└── WebAPIUser.csproj             — Dependencias NuGet
 ```
 
 ---
 
-## 🔌 Endpoints Principales
+## Base de datos
 
-| Método | Ruta | Descripción |
-|--------|------|------------|
-| **GET** | `/api/usuarios/listar` | Obtiene todos los usuarios |
-| **GET** | `/api/usuarios/buscar/{id}` | Busca usuario por ID |
-| **POST** | `/api/usuarios/guardar` | Crea nuevo usuario |
-| **PUT** | `/api/usuarios/actualizar/{id}` | Actualiza usuario |
-| **DELETE** | `/api/usuarios/eliminar/{id}` | Elimina usuario |
+La base de datos `db_user` se crea automáticamente en LocalDB al ejecutar la aplicación.
 
-### Ejemplo: Crear Usuario
+### Diagrama de tablas
+
+```
+┌──────────────────┐        ┌──────────────────────┐        ┌──────────────────┐
+│     Usuario      │        │    UsuarioTarea       │        │      Tarea       │
+├──────────────────┤        │    (Tabla Pivote)     │        ├──────────────────┤
+│ id          PK   │◄──────►│ id              PK   │◄──────►│ id          PK   │
+│ nombres          │        │ usuario_id      FK   │        │ titulo           │
+│ apellidos        │        │ tarea_id        FK   │        │ descripcion      │
+│ correo           │        │ fecha_asignacion     │        │ prioridad        │
+│ username         │        │ estado               │        │ categoria        │
+│ fecha_creacion   │        │ fecha_completado      │        │ fecha_vencimiento│
+└──────────────────┘        └──────────────────────┘        │ fecha_creacion   │
+                                                             └──────────────────┘
+```
+
+### Enums
+
+**`PrioridadEnum`** — prioridad de una tarea:
+
+| Valor | Nombre |
+|---|---|
+| 1 | Baja |
+| 2 | Media |
+| 3 | Alta |
+| 4 | Critica |
+
+**`EstadoTareaEnum`** — estado de una asignación usuario-tarea:
+
+| Valor | Nombre |
+|---|---|
+| 1 | Pendiente |
+| 2 | EnProgreso |
+| 3 | Completada |
+| 4 | Cancelada |
+
+### Cascade delete
+
+Al eliminar un `Usuario` o una `Tarea`, todos sus registros en `UsuarioTarea` se eliminan automáticamente.
+
+---
+
+## Endpoints
+
+### Usuarios — `/api/Usuarios`
+
+| Método | Ruta | Descripción | Códigos |
+|---|---|---|---|
+| GET | `/api/Usuarios/list` | Lista todos los usuarios | 200 |
+| GET | `/api/Usuarios/find/{id}` | Busca usuario por ID | 200, 400, 404 |
+| POST | `/api/Usuarios/guardar` | Crea un nuevo usuario | 201, 400, 409 |
+| PUT | `/api/Usuarios/actualizar/{id}` | Actualiza un usuario | 200, 400, 404, 409 |
+| DELETE | `/api/Usuarios/eliminar/{id}` | Elimina un usuario | 204, 400, 404 |
+
+### Tareas — `/api/Tareas`
+
+| Método | Ruta | Descripción | Códigos |
+|---|---|---|---|
+| GET | `/api/Tareas/list` | Lista todas las tareas | 200, 400 |
+| GET | `/api/Tareas/find/{id}` | Busca tarea por ID | 200, 400, 404 |
+| POST | `/api/Tareas/guardar` | Crea una nueva tarea | 201, 400 |
+| PUT | `/api/Tareas/actualizar/{id}` | Actualiza una tarea | 200, 400, 404 |
+| DELETE | `/api/Tareas/eliminar/{id}` | Elimina una tarea (cascade) | 204, 400, 404 |
+| POST | `/api/Tareas/asignar` | Asigna una tarea a un usuario | 200, 400, 404, 409 |
+| DELETE | `/api/Tareas/desasignar/{usuarioId}/{tareaId}` | Desasigna una tarea de un usuario | 204, 400, 404 |
+| GET | `/api/Tareas/user/{usuarioId}` | Lista tareas asignadas a un usuario | 200, 400 |
+
+---
+
+## Ejemplos de uso
+
+### Crear un usuario
 
 ```bash
-curl -X POST https://localhost:7000/api/usuarios/guardar \
+curl -X POST http://localhost:5000/api/Usuarios/guardar \
   -H "Content-Type: application/json" \
   -d '{
     "nombres": "Juan",
-    "apellidos": "Pérez",
-    "correo": "juan@example.com",
-    "username": "juanperez"
+    "apellidos": "García",
+    "correo": "juan.garcia@example.com",
+    "username": "juangarcia"
+  }'
+```
+
+**Respuesta 201 Created:**
+```json
+{
+  "id": 1,
+  "nombres": "Juan",
+  "apellidos": "García",
+  "correo": "juan.garcia@example.com",
+  "username": "juangarcia",
+  "fechaCreacion": "2026-05-08T14:30:00Z"
+}
+```
+
+### Crear una tarea
+
+```bash
+curl -X POST http://localhost:5000/api/Tareas/guardar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "titulo": "Implementar autenticación JWT",
+    "descripcion": "Agregar login con tokens JWT al proyecto",
+    "prioridad": 3,
+    "categoria": "Seguridad",
+    "fechaVencimiento": "2026-06-01T00:00:00Z"
   }'
 ```
 
@@ -113,296 +250,290 @@ curl -X POST https://localhost:7000/api/usuarios/guardar \
 ```json
 {
   "success": true,
-  "message": "Usuario creado exitosamente",
+  "message": "Tarea creada exitosamente",
   "data": {
     "id": 1,
-    "nombres": "Juan",
-    "apellidos": "Pérez",
-    "correo": "juan@example.com",
-    "username": "juanperez",
-    "fechaCreacion": "2024-01-15T14:30:00Z"
+    "titulo": "Implementar autenticación JWT",
+    "descripcion": "Agregar login con tokens JWT al proyecto",
+    "prioridad": 3,
+    "categoria": "Seguridad",
+    "fechaVencimiento": "2026-06-01T00:00:00Z",
+    "fechaCreacion": "2026-05-08T14:30:00Z",
+    "totalAsignaciones": 0
   },
-  "errors": [],
-  "timestamp": "2024-01-15T14:30:00Z"
+  "timestamp": "2026-05-08T14:30:00Z"
 }
 ```
 
----
+### Asignar una tarea a un usuario
 
-## 🏗️ Estructura del Proyecto
-
-```
-WebAPIUser/
-├── 📂 Common/                    (Utilidades)
-│   ├── AppConstants.cs
-│   ├── CacheService.cs
-│   ├── ControllerExtensions.cs
-│   └── Result.cs
-├── 📂 Controllers/               (Endpoints)
-│   └── UsuariosController.cs
-├── 📂 DTOs/                      (Transferencia de datos)
-│   ├── CreateUsuarioDto.cs
-│   ├── UpdateUsuarioDto.cs
-│   ├── UsuarioDto.cs
-│   ├── UsuarioSearchDto.cs
-│   └── ResponseDtos.cs
-├── 📂 Middleware/                (Manejo centralizado)
-│   └── ExceptionHandlingMiddleware.cs
-├── 📂 Models/                    (Entidades)
-│   ├── Usuario.cs
-│   └── DbUserContext.cs
-├── 📂 Services/                  (Lógica de negocio)
-│   ├── MapperService.cs
-│   └── UsuarioService.cs
-├── 📂 Validators/                (Validación)
-│   └── UsuarioValidator.cs
-├── Program.cs                    (Configuración)
-└── appsettings.json             (Connection strings)
+```bash
+curl -X POST http://localhost:5000/api/Tareas/asignar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "usuarioId": 1,
+    "tareaId": 1
+  }'
 ```
 
----
-
-## 📚 Documentación Completa
-
-### Documentos Disponibles
-
-1. **INDICE_DOCUMENTACION.md** ⭐ **Comienza aquí**
-   - Guía de navegación por perfil
-   - Búsqueda rápida de temas
-   - Plan de lectura recomendado
-
-2. **RESUMEN_EJECUTIVO.md** (15 páginas)
-   - Métricas de mejora
-   - Arquitectura de alto nivel
-   - Endpoints y seguridad
-
-3. **GUIA_PRACTICA.md** (20 páginas)
-   - Ejemplos de uso
-   - Requests/Responses
-   - Testing con cURL/Postman
-
-4. **MEJORAS_ADICIONALES.md** (18 páginas)
-   - Validadores especializados
-   - Result Pattern
-   - Respuestas estandarizadas
-
-5. **COMPARATIVA_ANTES_DESPUES.md** (25 páginas)
-   - Evolución del código
-   - Mejoras visualizadas
-   - Comparativa lado a lado
-
-6. **TECNICO_REFERENCIA.md** (20 páginas)
-   - Componentes nuevos
-   - DTOs implementados
-   - Tablas de referencia
-
----
-
-## 🎯 Patrones y Principios Implementados
-
-### 8+ Patrones de Diseño
-- ✅ **MVC** - Separación de responsabilidades
-- ✅ **Repository** - Abstracción de datos
-- ✅ **Dependency Injection** - Inyección de dependencias
-- ✅ **Factory** - Creación de objetos
-- ✅ **Middleware** - Procesamiento centralizado
-- ✅ **DTO** - Transferencia segura
-- ✅ **Validator** - Validación reutilizable
-- ✅ **Result Pattern** - Manejo funcional de errores
-
-### 5/5 Principios SOLID
-- **S** - Single Responsibility
-- **O** - Open/Closed
-- **L** - Liskov Substitution
-- **I** - Interface Segregation
-- **D** - Dependency Inversion
-
----
-
-## 🧪 Testing
-
-### Con Swagger
+**Respuesta 200 OK:**
+```json
+{
+  "success": true,
+  "message": "Tarea asignada exitosamente",
+  "timestamp": "2026-05-08T14:31:00Z"
+}
 ```
-https://localhost:7000/swagger
+
+### Ver tareas de un usuario
+
+```bash
+curl http://localhost:5000/api/Tareas/user/1
+```
+
+**Respuesta 200 OK:**
+```json
+{
+  "success": true,
+  "message": "Se encontraron 3 tareas para el usuario",
+  "data": [
+    {
+      "tareaId": 1,
+      "titulo": "Implementar autenticación JWT",
+      "descripcion": "Agregar login con tokens JWT al proyecto",
+      "prioridad": 3,
+      "estadoAsignacion": 1,
+      "fechaAsignacion": "2026-05-08T14:31:00Z",
+      "fechaCompletado": null
+    }
+  ],
+  "timestamp": "2026-05-08T14:32:00Z"
+}
+```
+
+### Desasignar una tarea
+
+```bash
+curl -X DELETE http://localhost:5000/api/Tareas/desasignar/1/1
+```
+
+**Respuesta 204 No Content**
+
+---
+
+## Arquitectura
+
+El flujo de una petición siempre sigue el mismo camino:
+
+```
+Request HTTP
+    │
+    ▼
+ExceptionHandlingMiddleware   ← captura cualquier excepción no manejada
+    │
+    ▼
+Controller                    ← valida ModelState, delega al servicio
+    │
+    ▼
+Service                       ← lógica de negocio, validaciones de dominio
+    │
+    ▼
+DbUserContext (EF Core)       ← traduce objetos C# a SQL
+    │
+    ▼
+SQL Server (db_user)
+```
+
+### Capas
+
+- **Controllers** — reciben la petición HTTP, validan el modelo y retornan la respuesta. No contienen lógica de negocio.
+- **Services** — contienen toda la lógica: validación de correo único, verificación de existencia, mapeo de entidades.
+- **MapperService** — centraliza la transformación entre entidades `Usuario` y sus DTOs.
+- **DbUserContext** — configura el mapeo columna-propiedad con Fluent API (nombres en snake_case, tipos explícitos, relaciones con cascade delete).
+- **Middleware** — `ExceptionHandlingMiddleware` intercepta excepciones y retorna JSON estructurado con el código HTTP apropiado.
+- **Data Seeders** — insertan datos de prueba al arrancar si las tablas están vacías. Son idempotentes.
+
+### Decisiones de diseño
+
+- `AsNoTracking()` en todas las consultas de solo lectura para mejor rendimiento.
+- DTOs separados para Create/Update/Response — cada operación tiene sus propias validaciones sin contaminar el modelo.
+- Cascade delete en `UsuarioTarea` — al eliminar un usuario o tarea, sus asignaciones se eliminan automáticamente sin código adicional.
+- El seeder es idempotente — reiniciar la app no duplica datos.
+
+---
+
+## Documentación adicional
+
+Dentro de `WebAPIUser/Documentacion/`:
+
+| Archivo | Contenido |
+|---|---|
+| `PROJECT_DOCUMENTATION.md` | Documentación técnica completa: DB, modelos, DTOs, servicios, endpoints, decisiones de diseño |
+
+La documentación XML de todos los métodos, clases y propiedades está generada automáticamente desde los `/// <summary>` del código y es visible en Swagger UI.
+
+---
+
+## Comandos útiles
+
+### Migraciones
+
+```bash
+# Crear una nueva migración
+dotnet ef migrations add NombreMigracion --project WebAPIUser
+
+# Aplicar migraciones pendientes
+dotnet ef database update --project WebAPIUser
+
+# Ver el historial de migraciones
+dotnet ef migrations list --project WebAPIUser
+
+# Revertir a una migración anterior
+dotnet ef database update NombreMigracionAnterior --project WebAPIUser
+
+# Eliminar la última migración (solo si no fue aplicada a la DB)
+dotnet ef migrations remove --project WebAPIUser
+```
+
+### Build y ejecución
+
+```bash
+# Restaurar dependencias
+dotnet restore
+
+# Compilar sin ejecutar
+dotnet build
+
+# Ejecutar en modo desarrollo (aplica migraciones + seeding automático)
+dotnet run
+
+# Ejecutar en modo producción
+dotnet run --environment Production
+
+# Publicar para despliegue
+dotnet publish -c Release -o ./publish
+```
+
+### Verificar la base de datos
+
+```bash
+# Conectar a LocalDB desde línea de comandos
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d db_user -Q "SELECT * FROM Usuario"
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d db_user -Q "SELECT * FROM Tarea"
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d db_user -Q "SELECT * FROM UsuarioTarea"
+```
+
+---
+
+## Probar la API
+
+### Con Swagger UI
+
+Con el proyecto corriendo, abre en el navegador:
+
+```
+http://localhost:5000/swagger
+```
+
+Desde ahí puedes ejecutar cualquier endpoint directamente sin herramientas externas.
+
+### Con curl
+
+```bash
+# Listar todos los usuarios
+curl http://localhost:5000/api/Usuarios/list
+
+# Buscar usuario por ID
+curl http://localhost:5000/api/Usuarios/find/1
+
+# Crear usuario
+curl -X POST http://localhost:5000/api/Usuarios/guardar \
+  -H "Content-Type: application/json" \
+  -d '{"nombres":"Ana","apellidos":"López","correo":"ana.lopez@example.com","username":"analopez"}'
+
+# Actualizar usuario
+curl -X PUT http://localhost:5000/api/Usuarios/actualizar/1 \
+  -H "Content-Type: application/json" \
+  -d '{"nombres":"Ana","apellidos":"López","correo":"ana.nuevo@example.com","username":"analopez"}'
+
+# Eliminar usuario
+curl -X DELETE http://localhost:5000/api/Usuarios/eliminar/1
+
+# Listar todas las tareas
+curl http://localhost:5000/api/Tareas/list
+
+# Buscar tarea por ID
+curl http://localhost:5000/api/Tareas/find/1
+
+# Crear tarea
+curl -X POST http://localhost:5000/api/Tareas/guardar \
+  -H "Content-Type: application/json" \
+  -d '{"titulo":"Revisar código","descripcion":"Code review del sprint","prioridad":2,"categoria":"Desarrollo"}'
+
+# Asignar tarea a usuario
+curl -X POST http://localhost:5000/api/Tareas/asignar \
+  -H "Content-Type: application/json" \
+  -d '{"usuarioId":1,"tareaId":1}'
+
+# Ver tareas de un usuario
+curl http://localhost:5000/api/Tareas/user/1
+
+# Desasignar tarea de usuario
+curl -X DELETE http://localhost:5000/api/Tareas/desasignar/1/1
 ```
 
 ### Con Postman
-Importa la colección incluida y prueba todos los endpoints
 
-### Con cURL
-```bash
-# Listar
-curl https://localhost:7000/api/usuarios/listar
-
-# Buscar
-curl https://localhost:7000/api/usuarios/buscar/1
-
-# Crear
-curl -X POST https://localhost:7000/api/usuarios/guardar \
-  -H "Content-Type: application/json" \
-  -d '{"nombres":"Juan","apellidos":"Pérez","correo":"juan@example.com"}'
-```
+1. Importa una nueva colección.
+2. Establece la variable de entorno `base_url = http://localhost:5000`.
+3. Usa los endpoints de la tabla de la sección [Endpoints](#endpoints).
+4. Para POST y PUT, selecciona `Body → raw → JSON` y pega el cuerpo del request.
 
 ---
 
-## 🚀 Próximas Fases
+## Solución de problemas frecuentes
 
-### Fase 2: Testing (Semana 2)
-- [ ] Tests unitarios (xUnit)
-- [ ] Tests de integración
-- [ ] Mock de dependencias (Moq)
-- [ ] Cobertura 80%+
+**La app no arranca y dice que no puede conectar a la base de datos**
+- Verifica que SQL Server LocalDB esté instalado: `sqllocaldb info`
+- Si no existe la instancia, créala: `sqllocaldb create MSSQLLocalDB`
+- Inicia la instancia: `sqllocaldb start MSSQLLocalDB`
 
-### Fase 3: Seguridad (Semana 3)
-- [ ] Autenticación JWT
-- [ ] Autorización RBAC
-- [ ] CORS configurado
-- [ ] Rate limiting
+**Error "Cannot open database db_user"**
+- Las migraciones se aplican automáticamente al arrancar. Si falla, ejecuta manualmente:
+  ```bash
+  dotnet ef database update --project WebAPIUser
+  ```
 
-### Fase 4: Performance (Semana 4)
-- [ ] Redis para caché
-- [ ] Optimización de queries
-- [ ] Compression HTTP
-- [ ] Monitoring
+**El puerto 5000 ya está en uso**
+- Cambia el puerto en `Properties/launchSettings.json` o usa:
+  ```bash
+  dotnet run --urls "http://localhost:5001"
+  ```
 
-### Fase 5: DevOps (Semana 5)
-- [ ] Docker
-- [ ] CI/CD (GitHub Actions)
-- [ ] Kubernetes
-- [ ] Logging centralizado
+**Swagger no carga los comentarios XML**
+- Verifica que `<GenerateDocumentationFile>true</GenerateDocumentationFile>` esté en el `.csproj`.
+- Recompila el proyecto: `dotnet build`.
 
----
-
-## 📊 Estadísticas del Proyecto
-
-| Métrica | Valor |
-|---------|-------|
-| **Versión** | 2.0 |
-| **.NET Target** | 10.0 |
-| **C# Version** | 14.0 |
-| **Archivos de Código** | 20+ |
-| **Líneas de Código** | 2000+ |
-| **Patrones Implementados** | 8+ |
-| **Documentos** | 10 |
-| **Páginas de Documentación** | 150+ |
-| **Ejemplos Prácticos** | 50+ |
-| **Errores de Compilación** | 0 ✅ |
-| **Warnings** | 0 ✅ |
+**Los datos de prueba no se insertan**
+- El seeder solo inserta si las tablas están vacías. Si quieres reiniciar los datos:
+  ```bash
+  # Borrar y recrear la base de datos
+  dotnet ef database drop --project WebAPIUser
+  dotnet ef database update --project WebAPIUser
+  # Luego ejecuta la app normalmente
+  dotnet run
+  ```
 
 ---
 
-## 🔒 Validación y Seguridad
+## Contribuir
 
-- ✅ Validación exhaustiva con Data Annotations
-- ✅ Validación de negocio en servicios
-- ✅ Prevención de correos duplicados
-- ✅ Middleware centralizado de excepciones
-- ✅ Respuestas consistentes
-- ✅ Códigos HTTP apropiados
-- ✅ Logging completo
-- ✅ Manejo seguro de errores
-
----
-
-## 💡 Casos de Uso
-
-### Crear Usuario
-1. Validar datos de entrada
-2. Verificar duplicidad de correo
-3. Crear usuario
-4. Guardar en BD
-5. Retornar con ID
-
-### Buscar Usuario
-1. Validar ID
-2. Buscar en BD
-3. Si existe, convertir a DTO
-4. Retornar con 200 OK
-5. Si no existe, retornar 404
-
-### Actualizar Usuario
-1. Validar ID y datos
-2. Buscar usuario
-3. Verificar correo no duplicado
-4. Actualizar propiedades
-5. Guardar en BD
-
-### Eliminar Usuario
-1. Validar ID
-2. Buscar usuario
-3. Eliminar
-4. Retornar 204 No Content
-
----
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/AmazingFeature`)
-3. Commit (`git commit -m 'Add AmazingFeature'`)
-4. Push (`git push origin feature/AmazingFeature`)
+1. Haz fork del repositorio
+2. Crea una rama: `git checkout -b feature/nombre-feature`
+3. Haz commit de tus cambios: `git commit -m 'feat: descripción'`
+4. Push a la rama: `git push origin feature/nombre-feature`
 5. Abre un Pull Request
 
 ---
 
-## 📝 Licencia
-
-MIT License - Ver `LICENSE`
-
----
-
-## 📞 Soporte
-
-### Preguntas Frecuentes
-
-**¿Cómo agrego un nuevo endpoint?**
-1. Crear DTO en `DTOs/`
-2. Crear validación si es necesaria
-3. Agregar método en `Services/`
-4. Agregar ruta en `Controllers/`
-
-**¿Cómo debuggeo?**
-- Ver logs de consola
-- Usar breakpoints en IDE
-- Revisar Swagger
-
-**¿Cómo testeo?**
-- Usar Swagger
-- Usar Postman
-- Usar cURL
-- Escribir tests unitarios
-
----
-
-## 🎉 Agradecimientos
-
-WebAPIUser v2.0 es un referente de buenas prácticas en desarrollo de APIs REST con .NET 10.
-
----
-
-## 📋 Checklist Rápido
-
-- [ ] Instalé .NET 10.0 SDK
-- [ ] Ejecuté `dotnet restore`
-- [ ] Creé la base de datos
-- [ ] Ejecuté `dotnet run`
-- [ ] Accedí a Swagger
-- [ ] Probé un endpoint
-- [ ] Leí la documentación
-- [ ] Entiendo la arquitectura
-
----
-
-```
-╔════════════════════════════════════════════════════════════════════╗
-║                                                                    ║
-║            🚀 WebAPIUser v2.0 - Enterprise-Grade API 🚀          ║
-║                                                                    ║
-║          .NET 10 | C# 14.0 | SOLID Principles | Production Ready  ║
-║                                                                    ║
-╚════════════════════════════════════════════════════════════════════╝
-```
-
-**Versión:** 2.0 | **Estado:** ✅ Production Ready | **Última actualización:** 2024-01-15
+**Autor:** Libardo Amesquita · `libardoadolfo2@gmail.com`

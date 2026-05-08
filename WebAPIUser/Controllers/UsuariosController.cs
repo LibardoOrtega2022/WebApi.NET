@@ -7,6 +7,7 @@ namespace WebAPIUser.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "Users")]
     public class UsuariosController : ControllerBase
     {
         private readonly IUsuarioService _usuarioService;
@@ -20,7 +21,7 @@ namespace WebAPIUser.Controllers
 
         /// <summary>
         /// Obtiene la lista de todos los usuarios.
-        /// <br/>Retrieves the list of all users.
+        /// <br/>/Retrieves the list of all users.
         /// </summary>
         /// <returns>
         /// Lista de usuarios registrados en el sistema.
@@ -40,7 +41,7 @@ namespace WebAPIUser.Controllers
 
         /// <summary>
         /// Busca un usuario por su ID.
-        /// <br/>Finds a user by their ID.
+        /// <br/>/Finds a user by their ID.
         /// </summary>
         /// <param name="id">
         /// ID del usuario a buscar (debe ser mayor a 0).
@@ -85,7 +86,7 @@ namespace WebAPIUser.Controllers
 
         /// <summary>
         /// Crea un nuevo usuario en el sistema.
-        /// <br/>Creates a new user in the system.
+        /// <br/>/Creates a new user in the system.
         /// </summary>
         /// <param name="createDto">
         /// Datos del usuario a crear (nombre, correo, contraseña).
@@ -107,7 +108,7 @@ namespace WebAPIUser.Controllers
         /// El correo electrónico ya está registrado en el sistema.
         /// <br/>The email address is already registered in the system.
         /// </response>
-        [HttpPost("guardar")]
+        [HttpPost("save")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -131,7 +132,7 @@ namespace WebAPIUser.Controllers
 
         /// <summary>
         /// Actualiza un usuario existente de forma completa (PUT).
-        /// <br/>Fully updates an existing user (PUT).
+        /// <br/>/Fully updates an existing user (PUT).
         /// </summary>
         /// <param name="id">
         /// ID del usuario a actualizar (debe ser mayor a 0).
@@ -161,7 +162,7 @@ namespace WebAPIUser.Controllers
         /// El correo electrónico ya está registrado por otro usuario.
         /// <br/>The email address is already registered by another user.
         /// </response>
-        [HttpPut("actualizar/{id}")]
+        [HttpPut("update/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -197,7 +198,7 @@ namespace WebAPIUser.Controllers
 
         /// <summary>
         /// Elimina un usuario del sistema de forma permanente.
-        /// <br/>Permanently deletes a user from the system.
+        /// <br/>/Permanently deletes a user from the system.
         /// </summary>
         /// <param name="id">
         /// ID del usuario a eliminar (debe ser mayor a 0).
@@ -219,7 +220,7 @@ namespace WebAPIUser.Controllers
         /// Usuario no encontrado con el ID proporcionado.
         /// <br/>User not found with the provided ID.
         /// </response>
-        [HttpDelete("eliminar/{id}")]
+        [HttpDelete("delete/{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

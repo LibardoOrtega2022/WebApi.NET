@@ -10,6 +10,7 @@ namespace WebAPIUser.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[ApiExplorerSettings(GroupName = "Tasks")]
 public class TareasController : ControllerBase
 {
     private readonly ITareaService _tareaService;
@@ -25,7 +26,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Obtiene todas las tareas del sistema.
-    /// <br/>Retrieves all tasks from the system.
+    /// <br/>/Retrieves all tasks from the system.
     /// </summary>
     /// <remarks>
     /// Recupera la lista completa de tareas existentes.
@@ -74,7 +75,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Obtiene una tarea específica por su identificador.
-    /// <br/>Retrieves a specific task by its identifier.
+    /// <br/>/Retrieves a specific task by its identifier.
     /// </summary>
     /// <remarks>
     /// Busca y retorna una tarea individual según su ID.
@@ -134,7 +135,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Crea una nueva tarea en el sistema.
-    /// <br/>Creates a new task in the system.
+    /// <br/>/Creates a new task in the system.
     /// </summary>
     /// <remarks>
     /// Inserta una tarea nueva en la base de datos con validaciones.
@@ -167,7 +168,7 @@ public class TareasController : ControllerBase
     /// Datos inválidos o error en la base de datos.
     /// <br/>Invalid data or database error.
     /// </response>
-    [HttpPost("guardar")]
+    [HttpPost("save")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> CreateTarea([FromBody] CreateTareaDto createDto)
@@ -195,7 +196,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Actualiza una tarea existente de forma completa (PUT).
-    /// <br/>Fully updates an existing task (PUT).
+    /// <br/>/Fully updates an existing task (PUT).
     /// </summary>
     /// <remarks>
     /// Modifica todos los datos de una tarea existente.
@@ -235,7 +236,7 @@ public class TareasController : ControllerBase
     /// Tarea no encontrada con el ID proporcionado.
     /// <br/>Task not found with the provided ID.
     /// </response>
-    [HttpPut("actualizar/{id}")]
+    [HttpPut("update/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -268,7 +269,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Elimina una tarea del sistema de forma permanente.
-    /// <br/>Permanently deletes a task from the system.
+    /// <br/>/Permanently deletes a task from the system.
     /// </summary>
     /// <remarks>
     /// Borra una tarea existente y todas sus asignaciones asociadas (eliminación en cascada).
@@ -302,7 +303,7 @@ public class TareasController : ControllerBase
     /// Error en la base de datos o excepción no manejada.
     /// <br/>Database error or unhandled exception.
     /// </response>
-    [HttpDelete("eliminar/{id}")]
+    [HttpDelete("delete/{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -326,7 +327,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Asigna una tarea a un usuario específico (relación M:M).
-    /// <br/>Assigns a task to a specific user (M:M relationship).
+    /// <br/>/Assigns a task to a specific user (M:M relationship).
     /// </summary>
     /// <remarks>
     /// Crea una relación entre un usuario y una tarea en la tabla pivote UsuarioTarea.
@@ -370,7 +371,7 @@ public class TareasController : ControllerBase
     /// Error en la base de datos o excepción no manejada.
     /// <br/>Database error or unhandled exception.
     /// </response>
-    [HttpPost("asignar")]
+    [HttpPost("assign")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -404,7 +405,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Desasigna una tarea de un usuario (elimina la relación M:M).
-    /// <br/>Unassigns a task from a user (removes the M:M relationship).
+    /// <br/>/Unassigns a task from a user (removes the M:M relationship).
     /// </summary>
     /// <remarks>
     /// Elimina la relación entre un usuario y una tarea en la tabla UsuarioTarea.
@@ -443,7 +444,7 @@ public class TareasController : ControllerBase
     /// Error en la base de datos o excepción no manejada.
     /// <br/>Database error or unhandled exception.
     /// </response>
-    [HttpDelete("desasignar/{usuarioId}/{tareaId}")]
+    [HttpDelete("unassign/{usuarioId}/{tareaId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -467,7 +468,7 @@ public class TareasController : ControllerBase
 
     /// <summary>
     /// Obtiene todas las tareas asignadas a un usuario específico.
-    /// <br/>Retrieves all tasks assigned to a specific user.
+    /// <br/>/Retrieves all tasks assigned to a specific user.
     /// </summary>
     /// <remarks>
     /// Recupera la lista de tareas asociadas a un usuario mediante la tabla pivote UsuarioTarea.

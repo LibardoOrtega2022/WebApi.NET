@@ -71,12 +71,8 @@ builder.Services.AddControllers();
 
 // ── Swagger / OpenAPI ─────────────────────────────────────────────────────────
 // AddOpenApi() registra el soporte nativo de .NET 10 para OpenAPI.
-// AddSwaggerGen() registra Swashbuckle para generar la UI interactiva.
-// Se llama dos veces: la primera sin opciones (requerida por el pipeline),
-// la segunda con la configuración personalizada del documento.
+// AddSwaggerGen() configura Swashbuckle con un único documento "v1".
 builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
-
 builder.Services.AddSwaggerGen(options =>
 {
     // Metadatos del documento OpenAPI visible en la UI de Swagger
@@ -90,6 +86,21 @@ builder.Services.AddSwaggerGen(options =>
             Name  = "Libardo Amesquita",
             Email = "libardoadolfo2@gmail.com"
         }
+    });
+
+    // Incluye TODOS los endpoints en el documento "v1" independientemente del GroupName.
+    // Sin esto, Swashbuckle filtra por GroupName y excluye los endpoints que tienen
+    // [ApiExplorerSettings(GroupName = "Tasks"/"Users")] porque no coinciden con "v1".
+    options.DocInclusionPredicate((_, _) => true);
+
+    // Usa el GroupName de [ApiExplorerSettings] como nombre de sección en Swagger UI.
+    // Muestra "Tasks" y "Users" en lugar de "Tareas" y "Usuarios".
+    options.TagActionsBy(api =>
+    {
+        var groupName = api.GroupName;
+        return groupName is not null
+            ? [groupName]
+            : [api.ActionDescriptor.RouteValues["controller"]!];
     });
 
     // El archivo XML se genera automáticamente gracias a <GenerateDocumentationFile>true</GenerateDocumentationFile>

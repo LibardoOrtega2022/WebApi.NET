@@ -9,7 +9,7 @@ namespace WebAPIUser.Controllers;
 /// <br/>Controller for task management.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/Tasks")]
 [ApiExplorerSettings(GroupName = "Tasks")]
 public class TareasController : ControllerBase
 {

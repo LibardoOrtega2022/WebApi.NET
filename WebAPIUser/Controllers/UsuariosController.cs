@@ -5,7 +5,7 @@ using WebAPIUser.Services;
 
 namespace WebAPIUser.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Users")]
     [ApiController]
     [ApiExplorerSettings(GroupName = "Users")]
     public class UsuariosController : ControllerBase
